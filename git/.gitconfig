@@ -1,0 +1,32 @@
+[user]
+	email = jonmester3@gmail.com
+	name = Jon Cavallie Mester
+[init]
+	defaultBranch = main
+[core]
+	editor = nvr --remote-wait +'set bufhidden=wipe'
+	pager = delta
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	dark = true
+	line-numbers = true
+	side-by-side = false
+	syntax-theme = Coldark-Dark
+	minus-style = "syntax '#3A2520'"
+	minus-emph-style = "syntax '#5C3020'"
+	plus-style = "syntax '#2A3328'"
+	plus-emph-style = "syntax '#304830'"
+	hunk-header-style = syntax bold
+	hunk-header-decoration-style = omit
+	file-style = "bold #D97757"
+	file-decoration-style = "#5C534A ul"
+[merge]
+	conflictstyle = zdiff3

@@ -1,0 +1,4 @@
+--theme="Coldark-Dark"
+--italic-text=always
+--map-syntax "*.conf:INI"
+--map-syntax ".ignore:Git Ignore"

@@ -1,0 +1,51 @@
+# Starship prompt — Claude-inspired warm palette
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = "$directory$git_branch$git_status$character"
+right_format = "$cmd_duration$time"
+add_newline = false
+
+[character]
+success_symbol = "[❯](bold #D97757)"
+error_symbol = "[❯](bold #E89578)"
+
+[directory]
+truncation_length = 3
+truncate_to_repo = true
+style = "#7B9EBF"
+read_only = " 󰌾"
+read_only_style = "#E89578"
+
+[git_branch]
+symbol = " "
+style = "#B588B0"
+truncation_length = 24
+
+[git_status]
+conflicted = "≠"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+staged = "+${count}"
+modified = "~${count}"
+deleted = "x${count}"
+untracked = "?${count}"
+stashed = "•"
+style = "#D4A857"
+
+[git_state]
+rebase = "rebase"
+merge = "merge"
+style = "italic #D4A857"
+
+[cmd_duration]
+min_time = 2000
+style = "#5C534A"
+format = "[$duration]($style) "
+
+[time]
+disabled = false
+time_format = "%H:%M"
+style = "#5C534A"
+
+[package]
+disabled = true
