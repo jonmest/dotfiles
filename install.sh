@@ -69,12 +69,13 @@ install_rust_tools() {
     ok "Rust installed"
   fi
 
-  local tools=(eza bat git-delta zoxide starship)
+  local tools=(eza bat git-delta zoxide starship difftastic just)
   for tool in "${tools[@]}"; do
     local bin_name="$tool"
     # Map package names to binary names
     case "$tool" in
       git-delta) bin_name="delta" ;;
+      difftastic) bin_name="difft" ;;
     esac
 
     if command -v "$bin_name" &>/dev/null; then
@@ -85,6 +86,36 @@ install_rust_tools() {
       ok "$tool installed"
     fi
   done
+}
+
+install_lazygit() {
+  if command -v lazygit &>/dev/null; then
+    ok "lazygit already installed"
+    return
+  fi
+
+  info "Installing lazygit..."
+  local version
+  version=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+
+  local arch
+  arch=$(uname -m)
+  case "$arch" in
+    x86_64) arch="x86_64" ;;
+    aarch64|arm64) arch="arm64" ;;
+  esac
+
+  local os
+  os=$(uname -s)
+
+  local tmp
+  tmp="$(mktemp -d)"
+  curl -fsSL "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${version}_${os}_${arch}.tar.gz" -o "$tmp/lazygit.tar.gz"
+  tar -xf "$tmp/lazygit.tar.gz" -C "$tmp" lazygit
+  mv "$tmp/lazygit" "$HOME/.cargo/bin/lazygit"
+  chmod +x "$HOME/.cargo/bin/lazygit"
+  rm -rf "$tmp"
+  ok "lazygit installed"
 }
 
 install_nerd_font() {
@@ -110,7 +141,7 @@ stow_configs() {
   info "Linking config files with stow..."
   cd "$DOTFILES_DIR"
 
-  local packages=(wezterm fish starship nvim bat git)
+  local packages=(wezterm fish starship nvim bat git lazygit)
   for pkg in "${packages[@]}"; do
     if [ -d "$pkg" ]; then
       # Remove conflicting files before stowing
@@ -153,6 +184,7 @@ main() {
   if [ "$SKIP_PACKAGES" = false ]; then
     install_packages
     install_rust_tools
+    install_lazygit
     install_nerd_font
   else
     warn "Skipping package installation (--no-packages)"

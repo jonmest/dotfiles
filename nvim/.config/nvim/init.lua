@@ -224,7 +224,7 @@ local function on_attach(client, bufnr)
   -- Essentials
   map("n", "gd", vim.lsp.buf.definition, "Go to definition")
   map("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
-  map("n", "gk", vim.lsp.buf.implementation, "Go to implementation")
+  map("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
   map("n", "gr", vim.lsp.buf.references, "List references")
   map("n", "E",  vim.lsp.buf.hover, "Hover docs")
   map("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
@@ -297,15 +297,15 @@ vim.keymap.set("n", "<leader>sv", ":vsplit<CR>", { desc = "Vertical split" })
 vim.keymap.set("n", "<leader>sh", ":split<CR>",  { desc = "Horizontal split" })
 vim.keymap.set("n", "<leader>sx", ":close<CR>",  { desc = "Close split" })
 
--- Move line/block up/down (Alt+n / Alt+e for Colemak DHk)
-vim.keymap.set("n", "<A-n>", ":m .+1<CR>==", { silent = true, desc = "Move line down" })
-vim.keymap.set("n", "<A-e>", ":m .-2<CR>==", { silent = true, desc = "Move line up" })
-vim.keymap.set("i", "<A-n>", "<Esc>:m .+1<CR>==gi", { silent = true, desc = "Move line down" })
-vim.keymap.set("i", "<A-e>", "<Esc>:m .-2<CR>==gi", { silent = true, desc = "Move line up" })
-vim.keymap.set("v", "<A-n>", ":m '>+1<CR>gv=gv", { silent = true, desc = "Move block down" })
-vim.keymap.set("v", "<A-e>", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move block up" })
+-- Move line/block up/down (Alt+j / Alt+k)
+vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", { silent = true, desc = "Move line down" })
+vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", { silent = true, desc = "Move line up" })
+vim.keymap.set("i", "<A-j>", "<Esc>:m .+1<CR>==gi", { silent = true, desc = "Move line down" })
+vim.keymap.set("i", "<A-k>", "<Esc>:m .-2<CR>==gi", { silent = true, desc = "Move line up" })
+vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { silent = true, desc = "Move block down" })
+vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move block up" })
 
--- Terminal navigation (use <Esc> then <C-w>m/n/e/i to switch windows)
+-- Terminal navigation
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { silent = true, desc = "Exit terminal mode" })
 
 -- ---------------- Autopairs x cmp ----------------

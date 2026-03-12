@@ -12,6 +12,7 @@ alias ls="eza --icons --group-directories-first"
 alias ll="eza --icons --group-directories-first -la"
 alias lt="eza --icons --group-directories-first --tree --level=2"
 alias gs="git status"
+alias lg="lazygit"
 alias cat="bat --style=plain"
 alias catn="bat"
 
