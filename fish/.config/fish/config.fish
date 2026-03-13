@@ -1,9 +1,14 @@
 # ~/.config/fish/config.fish
-set -Ux PATH /opt/nvim-linux-x86_64/bin /home/jon/.ghcup /usr/local/go/bin/go $PATH
+
+# Inherit paths that bash/zsh get from /etc/profile
+# Only adds if the directory exists and isn't already in PATH
+for p in /opt/homebrew/bin /opt/homebrew/sbin /usr/local/bin /usr/local/go/bin /opt/nvim-linux-x86_64/bin $HOME/.cargo/bin $HOME/.local/bin $HOME/.ghcup/bin
+    test -d $p; and not contains $p $PATH; and fish_add_path $p
+end
 
 # Default editor
-set -Ux EDITOR nvim
-set -Ux VISUAL nvim
+set -gx EDITOR nvim
+set -gx VISUAL nvim
 set -gx GIT_EDITOR "nvr --remote-wait +'set bufhidden=wipe'"
 
 # Aliases
