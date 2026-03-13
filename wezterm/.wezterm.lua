@@ -1,6 +1,21 @@
 -- ~/.wezterm.lua
 local wezterm = require 'wezterm'
 local mux = wezterm.mux
+
+-- Find fish shell across platforms
+local function find_fish()
+  local candidates = {
+    "/opt/homebrew/bin/fish",   -- macOS Apple Silicon
+    "/usr/local/bin/fish",      -- macOS Intel / Linuxbrew
+    "/usr/bin/fish",            -- Linux system package
+    "/home/" .. (os.getenv("USER") or "") .. "/.cargo/bin/fish",
+  }
+  for _, path in ipairs(candidates) do
+    local f = io.open(path, "r")
+    if f then f:close(); return path end
+  end
+  return nil
+end
 wezterm.on('gui-startup', function(cmd)
   local tab, pane, window = mux.spawn_window(cmd or {})
   window:gui_window():maximize()
@@ -127,6 +142,6 @@ return {
   enable_wayland = true, -- if you're on Wayland; otherwise ignore
 
   -- ---------- Launch ----------
-  default_prog = {"fish", "-l"},
+  default_prog = find_fish() and {find_fish(), "-l"} or nil,
 }
 
