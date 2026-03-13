@@ -107,7 +107,7 @@ install_lazygit() {
 
   info "Installing lazygit..."
   local version
-  version=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+  version=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | sed -n 's/.*"tag_name": "v\([^"]*\)".*/\1/p')
 
   local arch
   arch=$(uname -m)
