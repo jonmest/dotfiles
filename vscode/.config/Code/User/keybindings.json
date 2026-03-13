@@ -1,0 +1,28 @@
+// Place your key bindings in this file to override the defaults
+[
+  // Navigation (g = go)
+  { "key": "ctrl+k i", "command": "editor.action.goToImplementation", "when": "editorTextFocus" },
+  { "key": "ctrl+k d", "command": "editor.action.revealDefinition", "when": "editorTextFocus" },
+  { "key": "ctrl+k u", "command": "editor.action.goToReferences", "when": "editorTextFocus" },
+  { "key": "ctrl+k t", "command": "editor.action.goToTypeDefinition", "when": "editorTextFocus" },
+
+  // Edits
+  { "key": "ctrl+k n", "command": "editor.action.rename", "when": "editorTextFocus" },
+  { "key": "ctrl+k a", "command": "editor.action.quickFix", "when": "editorTextFocus" },
+  { "key": "ctrl+k shift+f", "command": "editor.action.formatDocument", "when": "editorTextFocus" },
+
+  // Diagnostics / problems
+  { "key": "ctrl+k ]", "command": "editor.action.marker.next", "when": "editorTextFocus" },
+  { "key": "ctrl+k [", "command": "editor.action.marker.prev", "when": "editorTextFocus" },
+  { "key": "ctrl+k p", "command": "workbench.actions.view.problems" },
+
+  // Symbols / hover
+  { "key": "ctrl+k h", "command": "editor.action.showHover", "when": "editorTextFocus" },
+  { "key": "ctrl+k s", "command": "workbench.action.gotoSymbol" },
+  { "key": "ctrl+k shift+s", "command": "workbench.action.showAllSymbols" },
+
+  // Panels
+  { "key": "ctrl+k shift+t", "command": "workbench.action.terminal.toggleTerminal" },
+  { "key": "ctrl+k e", "command": "workbench.view.explorer" },
+  { "key": "ctrl+k g", "command": "workbench.view.scm" }
+]

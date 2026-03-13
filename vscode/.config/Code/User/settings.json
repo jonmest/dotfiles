@@ -13,6 +13,7 @@
   "files.exclude": {
     "**/__pycache__": true
   },
+  "editor.inlayHints.enabled": "off",
   "workbench.editor.empty.hint": "hidden",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -22,7 +23,7 @@
   },
   "python.analysis.typeCheckingMode": "basic",
   "python.createEnvironment.trigger": "off",
-  "workbench.colorTheme": "Claude",
+  "workbench.colorTheme": "GitHub Dark Default",
   "haskell.manageHLS": "GHCup",
   "github.copilot.nextEditSuggestions.enabled": true,
   "editor.tabSize": 2,
@@ -63,9 +64,9 @@
     "asvetliakov.vscode-neovim": 1
   },
   "editor.minimap.enabled": false,
-  "editor.fontFamily": "'JetBrainsMono Nerd Font', monospace",
-  "editor.fontWeight": "200",
-  "editor.fontLigatures": true,
+  "editor.fontFamily": "'Monaspace Neon NF', monospace",
+  "editor.fontWeight": "300",
+  "editor.fontLigatures": "'calt', 'liga', 'ss01', 'ss02', 'ss03', 'ss06', 'ss07', 'ss08'",
   "editor.fontSize": 14,
   "editor.lineHeight": 1.7,
   "editor.letterSpacing": 0.3,
@@ -92,7 +93,6 @@
   "makefile.configureOnOpen": false,
   "chat.viewSessions.orientation": "stacked",
   "workbench.iconTheme": "Monokai Pro (Filter Spectrum) Icons",
-  "claudeCode.useTerminal": true,
   "chat.tools.urls.autoApprove": {
     "https://eodhd.com": true,
     "https://vectorbt.pro": true,
@@ -103,5 +103,10 @@
     "https://arxiv.org/list": true,
     "https://arxiv.org/list/q-fin.TR/recent": true,
     "https://arxiv.org/list/q-fin.TR": true
+  },
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  "files.watcherExclude": {
+    "**/.bloop": true,
+    "**/.metals": true
   }
 }

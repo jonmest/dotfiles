@@ -39,7 +39,16 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   -- vague kept as fallback if needed
   { "vague-theme/vague.nvim", lazy = true },
-  
+
+  {
+    "projekt0n/github-nvim-theme",
+    name = "github-theme",
+    priority = 1000,
+    config = function()
+      require("github-theme").setup({})
+    end,
+  },
+
 
 {
   "numToStr/Comment.nvim",
@@ -133,35 +142,10 @@ require("toggleterm").setup({
 })
 vim.keymap.set("n", "<leader>tt", ":ToggleTerm<CR>", { silent = true, desc = "Toggle terminal" })
 
--- Lualine theme matching Claude palette
-local claude_lualine = {
-  normal = {
-    a = { fg = "#1A1714", bg = "#7B9EBF", gui = "bold" },
-    b = { fg = "#C8BEB4", bg = "#2A2520" },
-    c = { fg = "#7A7068", bg = "#141210" },
-  },
-  insert = {
-    a = { fg = "#1A1714", bg = "#7DAE82", gui = "bold" },
-  },
-  visual = {
-    a = { fg = "#1A1714", bg = "#B588B0", gui = "bold" },
-  },
-  replace = {
-    a = { fg = "#1A1714", bg = "#D97757", gui = "bold" },
-  },
-  command = {
-    a = { fg = "#1A1714", bg = "#D4A857", gui = "bold" },
-  },
-  inactive = {
-    a = { fg = "#5C534A", bg = "#141210" },
-    b = { fg = "#5C534A", bg = "#141210" },
-    c = { fg = "#5C534A", bg = "#141210" },
-  },
-}
-require("lualine").setup({ options = { theme = claude_lualine, section_separators = "", component_separators = "" } })
+require("lualine").setup({ options = { theme = "github_dark_default", section_separators = "", component_separators = "" } })
 
 vim.o.background = "dark"
-vim.cmd.colorscheme("claude")
+vim.cmd.colorscheme("github_dark_default")
 
 -- ---------------- Diagnostics UX ----------------
 vim.diagnostic.config({
@@ -307,6 +291,16 @@ vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move b
 
 -- Terminal navigation
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { silent = true, desc = "Exit terminal mode" })
+
+-- Window focus nav (layout-independent: physical arrow keys)
+vim.keymap.set("n", "<C-Left>",  "<C-w>h", { silent = true, desc = "Focus left window" })
+vim.keymap.set("n", "<C-Right>", "<C-w>l", { silent = true, desc = "Focus right window" })
+vim.keymap.set("n", "<C-Up>",    "<C-w>k", { silent = true, desc = "Focus upper window" })
+vim.keymap.set("n", "<C-Down>",  "<C-w>j", { silent = true, desc = "Focus lower window" })
+vim.keymap.set("t", "<C-Left>",  [[<C-\><C-n><C-w>h]], { silent = true, desc = "Focus left window" })
+vim.keymap.set("t", "<C-Right>", [[<C-\><C-n><C-w>l]], { silent = true, desc = "Focus right window" })
+vim.keymap.set("t", "<C-Up>",    [[<C-\><C-n><C-w>k]], { silent = true, desc = "Focus upper window" })
+vim.keymap.set("t", "<C-Down>",  [[<C-\><C-n><C-w>j]], { silent = true, desc = "Focus lower window" })
 
 -- ---------------- Autopairs x cmp ----------------
 require("nvim-autopairs").setup({

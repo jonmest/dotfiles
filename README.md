@@ -74,7 +74,7 @@ To re-stow after pulling changes:
 
 ```bash
 cd ~/dotfiles
-stow -R wezterm fish starship nvim bat git lazygit
+stow -R wezterm fish starship nvim bat git lazygit vscode
 ```
 
 ## Fish aliases

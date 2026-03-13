@@ -46,3 +46,14 @@ status is-interactive; and fish_add_path ~/.ghcup/bin
 # This section can be safely removed at any time if needed.
 test -r '/home/jon/.opam/opam-init/init.fish' && source '/home/jon/.opam/opam-init/init.fish' > /dev/null 2> /dev/null; or true
 # END opam configuration
+
+# pnpm
+set -gx PNPM_HOME "/home/jon/.local/share/pnpm"
+if not string match -q -- $PNPM_HOME $PATH
+  set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
+
+# >>> coursier install directory >>>
+set -gx PATH "$PATH:/home/jon/.local/share/coursier/bin"
+# <<< coursier install directory <<<
