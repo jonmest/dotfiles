@@ -40,15 +40,26 @@ install_packages() {
   case "$DISTRO" in
     ubuntu|debian|pop|linuxmint)
       sudo apt update
-      sudo apt install -y git stow fish curl unzip fontconfig
+      sudo apt install -y git stow fish curl unzip fontconfig build-essential pkg-config libssl-dev
       ;;
     fedora)
-      sudo dnf install -y git stow fish curl unzip fontconfig
+      sudo dnf install -y git stow fish curl unzip fontconfig gcc gcc-c++ make openssl-devel pkg-config
       ;;
     arch|manjaro|endeavouros)
-      sudo pacman -Syu --noconfirm git stow fish curl unzip fontconfig
+      sudo pacman -Syu --noconfirm git stow fish curl unzip fontconfig base-devel openssl pkg-config
       ;;
     macos)
+      if ! command -v brew &>/dev/null; then
+        info "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      fi
+      # Xcode CLI tools (needed for cargo builds)
+      if ! xcode-select -p &>/dev/null; then
+        info "Installing Xcode Command Line Tools..."
+        xcode-select --install
+        warn "Press any key after Xcode CLI tools finish installing..."
+        read -r
+      fi
       brew install git stow fish curl
       ;;
     *)
@@ -119,10 +130,24 @@ install_lazygit() {
 }
 
 install_nerd_font() {
-  local font_dir="$HOME/.local/share/fonts"
-  if fc-list | grep -qi "JetBrainsMono Nerd Font"; then
-    ok "JetBrainsMono Nerd Font already installed"
-    return
+  local font_dir
+  if [ "$DISTRO" = "macos" ]; then
+    font_dir="$HOME/Library/Fonts"
+  else
+    font_dir="$HOME/.local/share/fonts"
+  fi
+
+  # Check if already installed
+  if [ "$DISTRO" = "macos" ]; then
+    if ls "$font_dir"/JetBrainsMono*.ttf &>/dev/null; then
+      ok "JetBrainsMono Nerd Font already installed"
+      return
+    fi
+  else
+    if fc-list | grep -qi "JetBrainsMono Nerd Font"; then
+      ok "JetBrainsMono Nerd Font already installed"
+      return
+    fi
   fi
 
   info "Installing JetBrainsMono Nerd Font..."
@@ -132,7 +157,7 @@ install_nerd_font() {
   curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz" -o "$tmp/jbm.tar.xz"
   tar -xf "$tmp/jbm.tar.xz" -C "$font_dir"
   rm -rf "$tmp"
-  fc-cache -fv
+  [ "$DISTRO" != "macos" ] && fc-cache -fv
   ok "JetBrainsMono Nerd Font installed"
 }
 
@@ -141,17 +166,33 @@ stow_configs() {
   info "Linking config files with stow..."
   cd "$DOTFILES_DIR"
 
-  local packages=(wezterm fish starship nvim bat git lazygit)
+  # These packages use ~/.config and stow normally on all platforms
+  local packages=(wezterm fish starship nvim bat git lazygit fontconfig)
   for pkg in "${packages[@]}"; do
     if [ -d "$pkg" ]; then
-      # Remove conflicting files before stowing
       stow --adopt "$pkg" 2>/dev/null || true
-      # Restore our versions (adopt pulls existing files in, then we reset)
       git checkout -- "$pkg" 2>/dev/null || true
       stow -R "$pkg"
       ok "Stowed $pkg"
     fi
   done
+
+  # VS Code needs special handling — different paths on macOS vs Linux
+  if [ -d "vscode" ]; then
+    if [ "$DISTRO" = "macos" ]; then
+      local vscode_dir="$HOME/Library/Application Support/Code/User"
+      mkdir -p "$vscode_dir"
+      ln -sf "$DOTFILES_DIR/vscode/.config/Code/User/settings.json" "$vscode_dir/settings.json"
+      # Theme extension
+      mkdir -p "$HOME/.vscode/extensions"
+      cp -r "$DOTFILES_DIR/vscode/.vscode/extensions/custom.claude-theme-1.0.0" "$HOME/.vscode/extensions/"
+    else
+      stow --adopt vscode 2>/dev/null || true
+      git checkout -- vscode 2>/dev/null || true
+      stow -R vscode
+    fi
+    ok "Stowed vscode"
+  fi
 }
 
 # ---------- Set default shell ----------

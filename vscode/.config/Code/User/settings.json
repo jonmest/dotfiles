@@ -1,0 +1,107 @@
+{
+
+  "git.autofetch": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  },
+  "zig.zls.enabled": "on",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "files.exclude": {
+    "**/__pycache__": true
+  },
+  "workbench.editor.empty.hint": "hidden",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "python.analysis.typeCheckingMode": "basic",
+  "python.createEnvironment.trigger": "off",
+  "workbench.colorTheme": "Claude",
+  "haskell.manageHLS": "GHCup",
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "editor.tabSize": 2,
+  "chat.tools.terminal.autoApprove": {
+    "mvn -Dtest=SpillingThreadUnsafeTest test -pl :flink-runtime -q": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -q -pl :flink-runtime spotless:apply": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -pl :flink-runtime spotless:apply -q": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -Dtest=SpillingThreadConstructorTest test -pl :flink-runtime -q": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -Dtest=SpillingThreadConstructorTest test -pl :flink-runtime -e": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -pl :flink-runtime -Dtest=SpillingThreadConstructorTest -U clean test -DskipITs -q": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "mvn -pl :flink-runtime -Dtest=SpillingThreadConstructorTest test -q": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "./mvnw": true,
+    "go": true,
+    "cargo test": true
+  },
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
+  "editor.minimap.enabled": false,
+  "editor.fontFamily": "'JetBrainsMono Nerd Font', monospace",
+  "editor.fontWeight": "200",
+  "editor.fontLigatures": true,
+  "editor.fontSize": 14,
+  "editor.lineHeight": 1.7,
+  "editor.letterSpacing": 0.3,
+  "editor.cursorStyle": "line",
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.smoothScrolling": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.padding.top": 16,
+  "editor.renderWhitespace": "selection",
+  "editor.scrollBeyondLastLine": false,
+  "workbench.list.smoothScrolling": true,
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "claudeCode.preferredLocation": "panel",
+  "chat.agentsControl.enabled": false,
+  "[mary]": {
+  
+    "server.path": "/home/jon/mary/target/release/mary-language-server",
+  },
+  "files.associations": {
+    "*.mary": "mary"
+  },
+  "makefile.configureOnOpen": false,
+  "chat.viewSessions.orientation": "stacked",
+  "workbench.iconTheme": "Monokai Pro (Filter Spectrum) Icons",
+  "claudeCode.useTerminal": true,
+  "chat.tools.urls.autoApprove": {
+    "https://eodhd.com": true,
+    "https://vectorbt.pro": true,
+    "https://arxiv.org": true,
+    "https://export.arxiv.org": true,
+    "https://arxiv.org/list/q-fin.PM/recent": true,
+    "https://arxiv.org/list/q-fin.PM": true,
+    "https://arxiv.org/list": true,
+    "https://arxiv.org/list/q-fin.TR/recent": true,
+    "https://arxiv.org/list/q-fin.TR": true
+  }
+}

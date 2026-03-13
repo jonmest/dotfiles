@@ -1,0 +1,143 @@
+/* Claude — warm dark theme for Obsidian
+   Drop into <vault>/.obsidian/snippets/ and enable in Settings → Appearance */
+
+/* Fonts — install Literata and Inter from Google Fonts, or they fall back gracefully */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+
+body.theme-dark {
+  /* Fonts */
+  --font-text:       "Crimson Pro", "Georgia", serif;
+  --font-text-weight: 300;
+  --font-interface:  "Inter", "Segoe UI", sans-serif;
+  --font-monospace:  "JetBrainsMono Nerd Font", "JetBrains Mono", "Fira Code", monospace;
+  --font-text-size:  17px;
+  --line-height:     1.7;
+  /* Base */
+  --background-primary:          #1A1714;
+  --background-primary-alt:      #1E1B17;
+  --background-secondary:        #141210;
+  --background-secondary-alt:    #100E0C;
+  --background-modifier-border:  #2A2520;
+  --background-modifier-form-field: #2A2520;
+  --background-modifier-success: #7DAE82;
+  --background-modifier-error:   #D97757;
+
+  /* Text */
+  --text-normal:                 #E8E0D8;
+  --text-muted:                  #7A7068;
+  --text-faint:                  #5C534A;
+  --text-accent:                 #D97757;
+  --text-accent-hover:           #E89578;
+  --text-on-accent:              #1A1714;
+  --text-error:                  #E89578;
+  --text-selection:              rgba(217, 119, 87, 0.15);
+
+  /* Interactive */
+  --interactive-normal:          #2A2520;
+  --interactive-hover:           #3A332C;
+  --interactive-accent:          #D97757;
+  --interactive-accent-hover:    #E89578;
+
+  /* Headings */
+  --h1-color:                    #E8E0D8;
+  --h2-color:                    #D97757;
+  --h3-color:                    #D4A857;
+  --h4-color:                    #7B9EBF;
+  --h5-color:                    #B588B0;
+  --h6-color:                    #6FAFAF;
+
+  /* Inline */
+  --bold-color:                  #E8E0D8;
+  --italic-color:                #C8BEB4;
+  --code-normal:                 #D4A857;
+  --code-background:             #2A2520;
+  --tag-color:                   #6FAFAF;
+  --tag-background:              rgba(111, 175, 175, 0.1);
+
+  /* Links */
+  --link-color:                  #7B9EBF;
+  --link-color-hover:            #9BB8D3;
+  --link-external-color:         #B588B0;
+  --link-external-color-hover:   #CDA0C8;
+  --link-unresolved-color:       #5C534A;
+
+  /* Scrollbar */
+  --scrollbar-bg:                transparent;
+  --scrollbar-thumb-bg:          #2A2520;
+  --scrollbar-active-thumb-bg:   #3A332C;
+
+  /* Tabs */
+  --tab-text-color:              #7A7068;
+  --tab-text-color-active:       #E8E0D8;
+  --tab-text-color-focused:      #E8E0D8;
+  --tab-text-color-focused-active: #E8E0D8;
+  --tab-background-active:       #1A1714;
+
+  /* Graph */
+  --graph-line:                  #2A2520;
+  --graph-node:                  #D97757;
+  --graph-node-focused:          #E89578;
+  --graph-node-tag:              #6FAFAF;
+  --graph-node-attachment:       #D4A857;
+
+  /* Misc */
+  --checkbox-color:              #D97757;
+  --checkbox-color-hover:        #E89578;
+  --blockquote-border-color:     #3A332C;
+  --table-header-background:     #1E1B17;
+  --table-row-alt-background:    #1E1B17;
+  --nav-item-color-active:       #D97757;
+  --titlebar-background:         #141210;
+  --titlebar-background-focused: #1A1714;
+
+  /* Cursor */
+  --cursor:                      #D97757;
+}
+
+/* Headings use Inter for clean contrast against serif body */
+.theme-dark .cm-header-1,
+.theme-dark .cm-header-2,
+.theme-dark .cm-header-3,
+.theme-dark .cm-header-4,
+.theme-dark .cm-header-5,
+.theme-dark .cm-header-6,
+.theme-dark .markdown-rendered h1,
+.theme-dark .markdown-rendered h2,
+.theme-dark .markdown-rendered h3,
+.theme-dark .markdown-rendered h4,
+.theme-dark .markdown-rendered h5,
+.theme-dark .markdown-rendered h6 {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.theme-dark .cm-header-1,
+.theme-dark .markdown-rendered h1 { font-weight: 700; font-size: 1.8em; }
+
+.theme-dark .cm-header-2,
+.theme-dark .markdown-rendered h2 { font-weight: 600; font-size: 1.4em; }
+
+.theme-dark .cm-header-3,
+.theme-dark .markdown-rendered h3 { font-weight: 600; font-size: 1.15em; }
+
+/* Subtle horizontal rules */
+.theme-dark hr {
+  border-color: #2A2520;
+}
+
+/* Checkbox accent */
+.theme-dark input[type="checkbox"]:checked {
+  background-color: #D97757;
+  border-color: #D97757;
+}
+
+/* Blockquote left border */
+.theme-dark blockquote {
+  border-left: 3px solid #3A332C;
+}
+
+/* Remove active line highlight */
+.theme-dark .cm-active,
+.theme-dark .cm-activeLine {
+  background-color: transparent !important;
+}
