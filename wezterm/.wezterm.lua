@@ -9,8 +9,8 @@ end)
 return {
   -- ---------- Core look ----------
   font = wezterm.font_with_fallback({
+    { family = "JetBrainsMono Nerd Font", weight = "ExtraLight" },
     { family = "JetBrainsMono Nerd Font", weight = "Light" },
-    { family = "JetBrainsMono Nerd Font", weight = "Regular" },
   }),
   font_size = 13.0,
   freetype_load_target = "Light",        -- lighter hinting = smoother glyphs
@@ -127,6 +127,6 @@ return {
   enable_wayland = true, -- if you're on Wayland; otherwise ignore
 
   -- ---------- Launch ----------
-  default_prog = {"/usr/bin/fish", "-l"}, -- or bash/fish
+  default_prog = {"fish", "-l"},
 }
 
