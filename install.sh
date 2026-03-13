@@ -80,7 +80,7 @@ install_rust_tools() {
     ok "Rust installed"
   fi
 
-  local tools=(eza bat git-delta zoxide starship difftastic just)
+  local tools=(eza bat git-delta zoxide starship difftastic just atuin)
   for tool in "${tools[@]}"; do
     local bin_name="$tool"
     # Map package names to binary names

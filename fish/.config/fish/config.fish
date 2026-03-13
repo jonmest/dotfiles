@@ -21,6 +21,11 @@ if type -q zoxide
     zoxide init fish | source
 end
 
+# Atuin (better shell history)
+if type -q atuin
+    atuin init fish | source
+end
+
 # Launch starship prompt if installed
 if type -q starship
     starship init fish | source
