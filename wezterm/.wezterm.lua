@@ -90,7 +90,10 @@ return {
   macos_window_background_blur = 20,     -- frosted glass effect (macOS; no-op on Linux)
   enable_tab_bar = true,
   hide_tab_bar_if_only_one_tab = false,
-  use_fancy_tab_bar = true,
+  use_fancy_tab_bar = false,
+  window_decorations = "RESIZE",
+  tab_bar_at_bottom = false,
+  show_new_tab_button_in_tab_bar = true,
   
   -- ---------- Quality of Life ----------
   check_for_updates = false,

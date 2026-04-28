@@ -10,6 +10,9 @@
 	gpgsign = true
 [init]
 	defaultBranch = main
+[push]
+	autoSetupRemote = true
+	default = current
 [core]
 	editor = nvr --remote-wait +'set bufhidden=wipe'
 	pager = delta
