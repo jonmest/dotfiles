@@ -1,9 +1,91 @@
 # ~/.config/fish/config.fish
 
-# Inherit paths that bash/zsh get from /etc/profile
-# Only adds if the directory exists and isn't already in PATH
-for p in /opt/homebrew/bin /opt/homebrew/sbin /usr/local/bin /usr/local/go/bin /opt/nvim-linux-x86_64/bin $HOME/.cargo/bin $HOME/.local/bin $HOME/.ghcup/bin
-    test -d $p; and not contains $p $PATH; and fish_add_path $p
+# Inherit paths that bash gets from ~/.bashrc and /etc/profile.
+# --global keeps startup from mutating fish's universal variables.
+for p in \
+    $HOME/.local/bin \
+    $HOME/.cargo/bin \
+    $HOME/.bun/bin \
+    $HOME/.cabal/bin \
+    $HOME/.ghcup/bin \
+    $HOME/.local/share/pnpm \
+    $HOME/.lmstudio/bin \
+    $HOME/zig \
+    /home/linuxbrew/.linuxbrew/bin \
+    /home/linuxbrew/.linuxbrew/sbin \
+    $HOME/.sdkman/candidates/maven/current/bin \
+    $HOME/.sdkman/candidates/java/current/bin \
+    $HOME/.sdkman/candidates/gradle/current/bin \
+    /usr/local/go/bin \
+    /opt/nvim-linux-x86_64/bin \
+    /opt/homebrew/bin \
+    /opt/homebrew/sbin
+    test -d $p; and fish_add_path --global --move $p
+end
+
+set -gx BUN_INSTALL $HOME/.bun
+set -gx PNPM_HOME $HOME/.local/share/pnpm
+set -gx SDKMAN_DIR $HOME/.sdkman
+
+if test -d /home/linuxbrew/.linuxbrew
+    set -gx HOMEBREW_PREFIX /home/linuxbrew/.linuxbrew
+    set -gx HOMEBREW_CELLAR /home/linuxbrew/.linuxbrew/Cellar
+    set -gx HOMEBREW_REPOSITORY /home/linuxbrew/.linuxbrew/Homebrew
+end
+
+set -gx NVM_DIR $HOME/.nvm
+
+function __nvm_use_version --argument-names node_version
+    test -n "$node_version"; or return 1
+    test "$node_version" != none; or return 1
+
+    set -l node_bin "$NVM_DIR/versions/node/$node_version/bin"
+    test -d $node_bin; or return 1
+
+    set -l next_path
+    for p in $PATH
+        if not string match -q "$NVM_DIR/versions/node/*/bin" $p
+            set next_path $next_path $p
+        end
+    end
+
+    set -gx PATH $node_bin $next_path
+    set -gx NVM_BIN $node_bin
+    set -gx NVM_INC "$NVM_DIR/versions/node/$node_version/include/node"
+end
+
+function __nvm_default_version
+    if test -s "$NVM_DIR/alias/default"
+        string trim (cat "$NVM_DIR/alias/default")
+        return 0
+    end
+
+    find "$NVM_DIR/versions/node" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null | sort -V | tail -n 1
+end
+
+if test -d "$NVM_DIR"
+    __nvm_use_version (__nvm_default_version)
+end
+
+function nvm --description "Node Version Manager"
+    test -s "$NVM_DIR/nvm.sh"; or begin
+        echo "nvm: $NVM_DIR/nvm.sh not found" >&2
+        return 1
+    end
+
+    set -l output (bash -c 'source "$NVM_DIR/nvm.sh"; nvm "$@"; status=$?; printf "\n__NVM_VERSION__=%s\n" "$(nvm current 2>/dev/null)"; exit $status' nvm $argv 2>&1)
+    set -l nvm_status $status
+
+    for line in $output
+        if string match -q "__NVM_VERSION__=*" $line
+            set -l node_version (string replace "__NVM_VERSION__=" "" $line)
+            __nvm_use_version $node_version
+        else
+            echo $line
+        end
+    end
+
+    return $nvm_status
 end
 
 # Default editor
@@ -60,7 +142,7 @@ if type -q starship
     starship init fish | source
 end
 
-status is-interactive; and fish_add_path ~/.ghcup/bin
+status is-interactive; and fish_add_path --global --move ~/.ghcup/bin
 
 
 # BEGIN opam configuration
@@ -71,13 +153,12 @@ status is-interactive; and fish_add_path ~/.ghcup/bin
 test -r '/home/jon/.opam/opam-init/init.fish' && source '/home/jon/.opam/opam-init/init.fish' > /dev/null 2> /dev/null; or true
 # END opam configuration
 
-# pnpm
-set -gx PNPM_HOME "/home/jon/.local/share/pnpm"
-if not string match -q -- $PNPM_HOME $PATH
-  set -gx PATH "$PNPM_HOME" $PATH
-end
-# pnpm end
-
 # >>> coursier install directory >>>
-set -gx PATH "$PATH:/home/jon/.local/share/coursier/bin"
+test -d /home/jon/.local/share/coursier/bin; and fish_add_path --global --append /home/jon/.local/share/coursier/bin
 # <<< coursier install directory <<<
+
+if test -d "$NVM_DIR"
+    __nvm_use_version (__nvm_default_version)
+end
+
+test -r '/home/jon/.opam/opam-init/init.fish' && source '/home/jon/.opam/opam-init/init.fish' > /dev/null 2> /dev/null; or true

@@ -83,7 +83,11 @@ require("lazy").setup({
 
 
   -- File explorer & terminal
-  { "nvim-tree/nvim-tree.lua", dependencies = { "nvim-tree/nvim-web-devicons" } },
+  {     
+        "nvim-tree/nvim-tree.lua", 
+        dependencies = { "nvim-tree/nvim-web-devicons" }, 
+        
+    },
   "akinsho/toggleterm.nvim",
 
   -- Fuzzy find & statusline
@@ -101,14 +105,29 @@ require("lazy").setup({
       priority = 1000,
   }, 
   "windwp/nvim-spectre",
-  "mg979/vim-visual-multi",
+  {
+    "mg979/vim-visual-multi",
+    init = function()
+      vim.g.VM_default_mappings = 0
+      vim.g.VM_maps = {
+        ["Find Under"]         = "<C-n>",
+        ["Find Subword Under"] = "<C-n>",
+        ["Add Cursor Up"]      = "<C-S-Up>",
+        ["Add Cursor Down"]    = "<C-S-Down>",
+        ["Select All"]         = "<leader>m",
+        ["Visual All"]         = "<leader>m",
+        ["Skip Region"]        = "<C-x>",
+        ["Remove Region"]      = "<C-p>",
+      }
+    end,
+  },
 
   -- Treesitter
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { "lua", "vim", "bash", "json", "toml", "rust" },
+      ensure_installed = { "lua", "vim", "bash", "json", "toml", "rust", "ocaml", "ocaml_interface" },
       highlight = { enable = true, additional_vim_regex_highlighting = false },
       indent = { enable = true },
     },
@@ -132,7 +151,10 @@ require("lazy").setup({
 }, { ui = { border = "rounded" } })
 
 -- ---------------- UI: tree + term + theme ----------------
-require("nvim-tree").setup({ view = { width = 30, side = "left" }, renderer = { group_empty = true }, hijack_cursor = true })
+require("nvim-tree").setup({ view = { width = 30, side = "left" }, renderer = { group_empty = true }, hijack_cursor = true, filters = {
+    dotfiles = false,
+    custom = { "node_modules", ".git", ".cargo" },
+  }, })
 vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { silent = true, desc = "Toggle file explorer" })
 
 require("toggleterm").setup({
@@ -190,6 +212,7 @@ require("conform").setup({
     rust = { "rustfmt" },
     lua  = { "stylua" },
     json = { "jq" },
+    ocaml = { "ocamlformat" },
   },
 })
 vim.api.nvim_create_autocmd("BufWritePre", {
@@ -222,7 +245,15 @@ local function on_attach(client, bufnr)
   end, "Toggle inlay hints")
 end
 
-
+-- ---------------- TypeScript / JavaScript ----------------
+vim.lsp.config("ts_ls", {
+  cmd = { "typescript-language-server", "--stdio" },
+  filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
+  root_markers = { "tsconfig.json", "package.json", ".git" },
+  on_attach = on_attach,
+  capabilities = capabilities,
+})
+vim.lsp.enable("ts_ls")
 
 -- Haskell LSP (haskell-language-server via vim.lsp.start)
 vim.api.nvim_create_autocmd("FileType", {
@@ -245,6 +276,41 @@ vim.api.nvim_create_autocmd("FileType", {
     })
   end,
 })
+-- ---------------- OCaml (first class) ----------------
+-- Requires `ocaml-lsp-server` (via opam). Optional: `ocamlformat`, `dune`.
+vim.filetype.add({
+  extension = {
+    ml = "ocaml",
+    mli = "ocaml",
+    mll = "ocaml",
+    mly = "ocaml",
+    mlt = "ocaml",
+    eliom = "ocaml",
+    eliomi = "ocaml",
+  },
+  filename = {
+    ["dune"] = "dune",
+    ["dune-project"] = "dune",
+    ["dune-workspace"] = "dune",
+  },
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "ocaml", "ocaml.interface", "ocaml.menhir", "ocaml.ocamllex", "dune" },
+  callback = function(args)
+    vim.lsp.start({
+      name = "ocamllsp",
+      cmd = { "ocamllsp" },
+      root_dir = vim.fs.root(
+        vim.api.nvim_buf_get_name(args.buf),
+        { "dune-project", "dune-workspace", "*.opam", "esy.json", "package.json", ".merlin", ".git" }
+      ),
+      on_attach = on_attach,
+      capabilities = capabilities,
+    })
+  end,
+})
+
 -- ---------------- Rust (first class) ----------------
 -- Install rust-analyzer via :Mason if you don't have it on PATH.
 -- rustaceanvim picks up this table automatically.
@@ -282,12 +348,10 @@ vim.keymap.set("n", "<leader>sh", ":split<CR>",  { desc = "Horizontal split" })
 vim.keymap.set("n", "<leader>sx", ":close<CR>",  { desc = "Close split" })
 
 -- Move line/block up/down (Alt+j / Alt+k)
-vim.keymap.set("n", "<A-j>", ":m .+1<CR>==", { silent = true, desc = "Move line down" })
-vim.keymap.set("n", "<A-k>", ":m .-2<CR>==", { silent = true, desc = "Move line up" })
-vim.keymap.set("i", "<A-j>", "<Esc>:m .+1<CR>==gi", { silent = true, desc = "Move line down" })
-vim.keymap.set("i", "<A-k>", "<Esc>:m .-2<CR>==gi", { silent = true, desc = "Move line up" })
-vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv", { silent = true, desc = "Move block down" })
-vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move block up" })
+vim.keymap.set("n", "<leader>j", ":m .+1<CR>==", { silent = true, desc = "Move line down" })
+vim.keymap.set("n", "<leader>k", ":m .-2<CR>==", { silent = true, desc = "Move line up" })
+vim.keymap.set("v", "<leader>j", ":m '>+1<CR>gv=gv", { silent = true, desc = "Move block down" })
+vim.keymap.set("v", "<leader>k", ":m '<-2<CR>gv=gv", { silent = true, desc = "Move block up" })
 
 -- Terminal navigation
 vim.keymap.set("t", "<Esc>", [[<C-\><C-n>]], { silent = true, desc = "Exit terminal mode" })
