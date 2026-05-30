@@ -2,20 +2,6 @@
 local wezterm = require 'wezterm'
 local mux = wezterm.mux
 
--- Find fish shell across platforms
-local function find_fish()
-  local candidates = {
-    "/opt/homebrew/bin/fish",   -- macOS Apple Silicon
-    "/usr/local/bin/fish",      -- macOS Intel / Linuxbrew
-    "/usr/bin/fish",            -- Linux system package
-    "/home/" .. (os.getenv("USER") or "") .. "/.cargo/bin/fish",
-  }
-  for _, path in ipairs(candidates) do
-    local f = io.open(path, "r")
-    if f then f:close(); return path end
-  end
-  return nil
-end
 wezterm.on('gui-startup', function(cmd)
   local tab, pane, window = mux.spawn_window(cmd or {})
   window:gui_window():maximize()
@@ -113,11 +99,7 @@ return {
     -- Split horizontally / vertically
     {key="|", mods="CTRL|SHIFT", action=wezterm.action{SplitHorizontal={domain="CurrentPaneDomain"}}},
     {key="_", mods="CTRL|SHIFT", action=wezterm.action{SplitVertical={domain="CurrentPaneDomain"}}},
-    -- Switch between panes
-    {key="h", mods="CTRL|ALT", action=wezterm.action{ActivatePaneDirection="Left"}},
-    {key="l", mods="CTRL|ALT", action=wezterm.action{ActivatePaneDirection="Right"}},
-    {key="k", mods="CTRL|ALT", action=wezterm.action{ActivatePaneDirection="Up"}},
-    {key="j", mods="CTRL|ALT", action=wezterm.action{ActivatePaneDirection="Down"}},
+    -- Pane navigation uses WezTerm's built-in defaults (CTRL+SHIFT+Arrows)
     -- Close pane/tab
     {key="w", mods="CTRL|SHIFT", action=wezterm.action{CloseCurrentPane={confirm=true}}},
     -- Quick reload config
@@ -128,7 +110,5 @@ return {
   warn_about_missing_glyphs = false,
   enable_wayland = false,
 
-  -- ---------- Launch ----------
-  default_prog = find_fish() and {find_fish(), "-l"} or nil,
 }
 
