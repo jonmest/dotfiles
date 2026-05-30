@@ -167,7 +167,7 @@ stow_configs() {
   cd "$DOTFILES_DIR"
 
   # These packages use ~/.config and stow normally on all platforms
-  local packages=(wezterm fish starship nvim bat git lazygit fontconfig)
+  local packages=(wezterm bash fish starship nvim bat git lazygit fontconfig)
   for pkg in "${packages[@]}"; do
     if [ -d "$pkg" ]; then
       stow --adopt "$pkg" 2>/dev/null || true
@@ -196,23 +196,23 @@ stow_configs() {
 }
 
 # ---------- Set default shell ----------
-set_fish_shell() {
-  if [ "$SHELL" = "$(which fish)" ]; then
-    ok "Fish is already the default shell"
+set_default_shell() {
+  local bash_path
+  bash_path="$(which bash)"
+
+  if [ "$SHELL" = "$bash_path" ]; then
+    ok "Bash is already the default shell"
     return
   fi
 
-  local fish_path
-  fish_path="$(which fish)"
-
-  if ! grep -qx "$fish_path" /etc/shells; then
-    info "Adding fish to /etc/shells..."
-    echo "$fish_path" | sudo tee -a /etc/shells
+  if ! grep -qx "$bash_path" /etc/shells; then
+    info "Adding bash to /etc/shells..."
+    echo "$bash_path" | sudo tee -a /etc/shells
   fi
 
-  info "Setting fish as default shell..."
-  chsh -s "$fish_path"
-  ok "Default shell set to fish (restart your session to take effect)"
+  info "Setting bash as default shell..."
+  chsh -s "$bash_path"
+  ok "Default shell set to bash (restart your session to take effect)"
 }
 
 # ---------- Main ----------
@@ -236,7 +236,7 @@ main() {
   fi
 
   stow_configs
-  set_fish_shell
+  set_default_shell
 
   echo ""
   ok "All done! Open a new terminal to see the changes."

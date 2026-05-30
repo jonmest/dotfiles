@@ -5,7 +5,7 @@ set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-packages=(wezterm fish starship nvim bat git lazygit fontconfig)
+packages=(wezterm bash fish starship nvim bat git lazygit fontconfig)
 
 for pkg in "${packages[@]}"; do
   if [ -d "$pkg" ]; then
