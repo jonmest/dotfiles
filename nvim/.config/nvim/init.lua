@@ -112,8 +112,8 @@ require("lazy").setup({
       vim.g.VM_maps = {
         ["Find Under"]         = "<C-n>",
         ["Find Subword Under"] = "<C-n>",
-        ["Add Cursor Up"]      = "<C-S-Up>",
-        ["Add Cursor Down"]    = "<C-S-Down>",
+        ["Add Cursor Up"]      = "<M-k>",
+        ["Add Cursor Down"]    = "<M-j>",
         ["Select All"]         = "<leader>m",
         ["Visual All"]         = "<leader>m",
         ["Skip Region"]        = "<C-x>",
@@ -125,11 +125,38 @@ require("lazy").setup({
   -- Treesitter
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "master",
     build = ":TSUpdate",
+    -- textobjects must track the same branch as the core (master); its `main`
+    -- branch is a rewrite incompatible with the nvim-treesitter.configs API.
+    dependencies = {
+      { "nvim-treesitter/nvim-treesitter-textobjects", branch = "master" },
+    },
     opts = {
       ensure_installed = { "lua", "vim", "bash", "json", "toml", "rust", "ocaml", "ocaml_interface" },
       highlight = { enable = true, additional_vim_regex_highlighting = false },
-      indent = { enable = true },
+      indent = { enable = true, disable = { "ocaml" } },
+      -- Function/impl-aware motions and text objects (great for Rust impl blocks)
+      textobjects = {
+        select = {
+          enable = true,
+          lookahead = true,
+          keymaps = {
+            ["af"] = "@function.outer",
+            ["if"] = "@function.inner",
+            ["ac"] = "@class.outer",   -- impl / struct / enum block
+            ["ic"] = "@class.inner",
+            ["aa"] = "@parameter.outer",
+            ["ia"] = "@parameter.inner",
+          },
+        },
+        move = {
+          enable = true,
+          set_jumps = true,
+          goto_next_start     = { ["]m"] = "@function.outer", ["]]"] = "@class.outer" },
+          goto_previous_start = { ["[m"] = "@function.outer", ["[["] = "@class.outer" },
+        },
+      },
     },
     config = function(_, opts) require("nvim-treesitter.configs").setup(opts) end,
   },
@@ -147,12 +174,56 @@ require("lazy").setup({
 
   -- Rust first-class experience (successor to rust-tools)
   -- Exposes :RustLsp commands and config via vim.g.rustaceanvim
-  { "mrcjkb/rustaceanvim", version = "^4" },
+  -- No version pin: track the latest release, which targets Neovim 0.11's
+  -- LSP API (the old ^4 line used a deprecated make_position_params call).
+  { "mrcjkb/rustaceanvim", version = false },
+
+  -- Cargo.toml dependency management: inline version hints + upgrade actions
+  {
+    "saecki/crates.nvim",
+    tag = "stable",
+    event = { "BufRead Cargo.toml" },
+    config = function()
+      require("crates").setup({
+        completion = { cmp = { enabled = true } },
+      })
+    end,
+  },
+
+  -- Diagnostics / quickfix / references panel
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {},
+  },
+
+  -- Leader-key discoverability popup
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {},
+  },
+
+  -- Debugging (nvim-dap). codelldb installed via :Mason; rustaceanvim's
+  -- :RustLsp debuggables drives this for Rust.
+  { "mfussenegger/nvim-dap" },
+  {
+    "rcarriga/nvim-dap-ui",
+    dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
+    config = function()
+      local dap, dapui = require("dap"), require("dapui")
+      dapui.setup()
+      dap.listeners.before.attach.dapui_config = function() dapui.open() end
+      dap.listeners.before.launch.dapui_config = function() dapui.open() end
+      dap.listeners.before.event_terminated.dapui_config = function() dapui.close() end
+      dap.listeners.before.event_exited.dapui_config = function() dapui.close() end
+    end,
+  },
 }, { ui = { border = "rounded" } })
 
 -- ---------------- UI: tree + term + theme ----------------
 require("nvim-tree").setup({ view = { width = 30, side = "left" }, renderer = { group_empty = true }, hijack_cursor = true, filters = {
-    dotfiles = false,
+    dotfiles = true,
     custom = { "node_modules", ".git", ".cargo" },
   }, })
 vim.keymap.set("n", "<leader>e", ":NvimTreeToggle<CR>", { silent = true, desc = "Toggle file explorer" })
@@ -164,10 +235,41 @@ require("toggleterm").setup({
 })
 vim.keymap.set("n", "<leader>tt", ":ToggleTerm<CR>", { silent = true, desc = "Toggle terminal" })
 
+-- bacon: background `cargo clippy` watcher in a dedicated float. Recompiles on
+-- save and shows errors instantly without blocking the editor. Requires the
+-- `bacon` binary (cargo install bacon).
+local bacon_term
+vim.keymap.set("n", "<leader>tb", function()
+  if not bacon_term then
+    bacon_term = require("toggleterm.terminal").Terminal:new({
+      cmd = "bacon clippy",
+      direction = "float",
+      float_opts = { border = "rounded" },
+      hidden = true,
+    })
+  end
+  bacon_term:toggle()
+end, { silent = true, desc = "Toggle bacon (cargo clippy watcher)" })
+
 require("lualine").setup({ options = { theme = "github_dark_default", section_separators = "", component_separators = "" } })
 
 vim.o.background = "dark"
 vim.cmd.colorscheme("github_dark_default")
+
+-- Transparent background (relies on terminal opacity, e.g. wezterm window_background_opacity)
+local function make_transparent()
+  for _, group in ipairs({
+    "Normal", "NormalNC", "NormalFloat", "FloatBorder", "FloatTitle",
+    "SignColumn", "LineNr", "EndOfBuffer", "VertSplit", "WinSeparator",
+    "StatusLine", "StatusLineNC", "TabLine", "TabLineFill",
+    "NeoTreeNormal", "NeoTreeNormalNC", "NeoTreeEndOfBuffer",
+    "TelescopeNormal", "TelescopeBorder",
+  }) do
+    vim.api.nvim_set_hl(0, group, { bg = "none", ctermbg = "none" })
+  end
+end
+make_transparent()
+vim.api.nvim_create_autocmd("ColorScheme", { callback = make_transparent })
 
 -- ---------------- Diagnostics UX ----------------
 vim.diagnostic.config({
@@ -182,6 +284,13 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Prev diagnostic" }
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 vim.keymap.set("n", "<leader>dd", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 vim.keymap.set("n", "<leader>dq", vim.diagnostic.setqflist, { desc = "Diagnostics → quickfix" })
+
+-- Trouble: diagnostics / references panels
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Trouble: workspace diagnostics" })
+vim.keymap.set("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Trouble: buffer diagnostics" })
+vim.keymap.set("n", "<leader>xr", "<cmd>Trouble lsp_references toggle<CR>", { desc = "Trouble: references" })
+vim.keymap.set("n", "<leader>xs", "<cmd>Trouble symbols toggle<CR>", { desc = "Trouble: symbols" })
+vim.keymap.set("n", "<leader>xq", "<cmd>Trouble qflist toggle<CR>", { desc = "Trouble: quickfix" })
 local spectre = require("spectre")
 vim.keymap.set("n", "<leader>sr", spectre.toggle, { desc = "Spectre: search & replace" })
 vim.keymap.set("n", "<leader>sw", function() spectre.open_visual({ select_word = true }) end,
@@ -191,9 +300,8 @@ local cmp = require("cmp")
 cmp.setup({
   mapping = cmp.mapping.preset.insert({
     ["<C-Space>"] = cmp.mapping.complete(),
-    ["<CR>"]      = cmp.mapping.confirm({ select = true }),
     ["<Tab>"]     = cmp.mapping(function(fallback)
-      if cmp.visible() then cmp.select_next_item() else fallback() end
+      if cmp.visible() then cmp.confirm({ select = true }) else fallback() end
     end, { "i", "s" }),
     ["<S-Tab>"]   = cmp.mapping(function(fallback)
       if cmp.visible() then cmp.select_prev_item() else fallback() end
@@ -204,6 +312,19 @@ cmp.setup({
     completion = cmp.config.window.bordered(),
     documentation = false --cmp.config.window.bordered(),
   },
+})
+
+-- Cargo.toml: add the crates source for dependency-version completion.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "toml",
+  callback = function()
+    cmp.setup.buffer({
+      sources = cmp.config.sources(
+        { { name = "crates" }, { name = "nvim_lsp" } },
+        { { name = "buffer" }, { name = "path" } }
+      ),
+    })
+  end,
 })
 
 -- ---------------- Formatting ----------------
@@ -298,6 +419,9 @@ vim.filetype.add({
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "ocaml", "ocaml.interface", "ocaml.menhir", "ocaml.ocamllex", "dune" },
   callback = function(args)
+    vim.bo[args.buf].shiftwidth = 2
+    vim.bo[args.buf].tabstop = 2
+    vim.bo[args.buf].softtabstop = 2
     vim.lsp.start({
       name = "ocamllsp",
       cmd = { "ocamllsp" },
@@ -320,8 +444,15 @@ vim.g.rustaceanvim = {
     capabilities = capabilities,
     default_settings = {
       ["rust-analyzer"] = {
-        cargo = { allFeatures = true },
-        checkOnSave = { command = "clippy" },
+        cargo = {
+          allFeatures = true,
+          buildScripts = { enable = true },
+        },
+        procMacro = { enable = true },
+        -- Run clippy (not just `cargo check`) on save. Newer rust-analyzer
+        -- schema: checkOnSave is a boolean, check.command selects the tool.
+        checkOnSave = true,
+        check = { command = "clippy" },
         completion = { autoself = { enable = true } },
         diagnostics = { experimental = { enable = true } },
         inlayHints = { lifetimeElisionHints = { enable = true } },
@@ -332,6 +463,58 @@ vim.g.rustaceanvim = {
     test_executor = "background",
   },
 }
+
+-- Rust-specific keymaps: override the generic LSP maps with rustaceanvim's
+-- richer :RustLsp equivalents in Rust buffers only.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "rust",
+  callback = function(args)
+    local map = function(lhs, rhs, desc)
+      vim.keymap.set("n", lhs, rhs, { buffer = args.buf, silent = true, desc = desc })
+    end
+    -- Hover actions (docs + jump to docs.rs, etc.); press again to enter the popup
+    map("K", function() vim.cmd.RustLsp("hover", "actions") end, "Rust hover actions")
+    -- Grouped Rust code actions
+    map("<leader>ca", function() vim.cmd.RustLsp("codeAction") end, "Rust code action")
+    -- Run / debug the thing under the cursor (test, bin, example…)
+    map("<leader>rr", function() vim.cmd.RustLsp("runnables") end, "Rust runnables")
+    map("<leader>rd", function() vim.cmd.RustLsp("debuggables") end, "Rust debuggables")
+    -- Macro expansion, parent module, Cargo.toml
+    map("<leader>rm", function() vim.cmd.RustLsp("expandMacro") end, "Expand macro")
+    map("<leader>rp", function() vim.cmd.RustLsp({ "parentModule" }) end, "Parent module")
+    map("<leader>rc", function() vim.cmd.RustLsp("openCargo") end, "Open Cargo.toml")
+    -- Render diagnostic explanation (rustc --explain style)
+    map("<leader>re", function() vim.cmd.RustLsp("explainError") end, "Explain error")
+  end,
+})
+
+-- ---------------- DAP: codelldb adapter + keymaps ----------------
+-- Install the debugger with `:MasonInstall codelldb`. rustaceanvim auto-detects
+-- a Mason-installed codelldb and uses it for :RustLsp debuggables; the explicit
+-- adapter below also lets nvim-dap launch/attach directly.
+local mason_pkg = vim.fn.stdpath("data") .. "/mason/packages/codelldb"
+local codelldb_path = mason_pkg .. "/extension/adapter/codelldb"
+if vim.fn.executable(codelldb_path) == 1 then
+  local dap = require("dap")
+  dap.adapters.codelldb = {
+    type = "server",
+    port = "${port}",
+    executable = {
+      command = codelldb_path,
+      args = { "--port", "${port}" },
+    },
+  }
+end
+
+local dap = require("dap")
+vim.keymap.set("n", "<leader>db", dap.toggle_breakpoint, { desc = "DAP: toggle breakpoint" })
+vim.keymap.set("n", "<leader>dc", dap.continue,          { desc = "DAP: continue/start" })
+vim.keymap.set("n", "<leader>dn", dap.step_over,         { desc = "DAP: step over" })
+vim.keymap.set("n", "<leader>di", dap.step_into,         { desc = "DAP: step into" })
+vim.keymap.set("n", "<leader>do", dap.step_out,          { desc = "DAP: step out" })
+vim.keymap.set("n", "<leader>dr", dap.repl.toggle,       { desc = "DAP: toggle REPL" })
+vim.keymap.set("n", "<leader>dx", dap.terminate,         { desc = "DAP: terminate" })
+vim.keymap.set("n", "<leader>du", function() require("dapui").toggle() end, { desc = "DAP: toggle UI" })
 
 -- ---------------- Telescope keymaps ----------------
 local tb = require("telescope.builtin")
