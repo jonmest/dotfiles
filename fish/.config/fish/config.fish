@@ -4,6 +4,7 @@
 # --global keeps startup from mutating fish's universal variables.
 for p in \
     $HOME/.local/bin \
+    $HOME/.npm-global/bin \
     $HOME/.cargo/bin \
     $HOME/.bun/bin \
     $HOME/.cabal/bin \
@@ -54,10 +55,37 @@ function __nvm_use_version --argument-names node_version
     set -gx NVM_INC "$NVM_DIR/versions/node/$node_version/include/node"
 end
 
+function __nvm_resolve_version --argument-names spec
+    test -n "$spec"; or return 1
+
+    # Follow alias chain (e.g. default -> lts/* -> v20.11.0)
+    set -l seen
+    while test -f "$NVM_DIR/alias/$spec"
+        contains -- $spec $seen; and return 1
+        set seen $seen $spec
+        set spec (string trim (cat "$NVM_DIR/alias/$spec"))
+        test -n "$spec"; or return 1
+    end
+
+    # Already a full installed version
+    if test -d "$NVM_DIR/versions/node/$spec"
+        echo $spec
+        return 0
+    end
+
+    # Prefix match (e.g. "26" -> "v26.1.0", "20.11" -> "v20.11.3")
+    set -l needle (string replace -r '^v' '' -- $spec)
+    set -l match (find "$NVM_DIR/versions/node" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null \
+        | string match -r "^v$needle(\\..*)?\$" \
+        | sort -V | tail -n 1)
+    test -n "$match"; and echo $match; and return 0
+    return 1
+end
+
 function __nvm_default_version
     if test -s "$NVM_DIR/alias/default"
-        string trim (cat "$NVM_DIR/alias/default")
-        return 0
+        set -l v (__nvm_resolve_version (string trim (cat "$NVM_DIR/alias/default")))
+        test -n "$v"; and echo $v; and return 0
     end
 
     find "$NVM_DIR/versions/node" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" 2>/dev/null | sort -V | tail -n 1
