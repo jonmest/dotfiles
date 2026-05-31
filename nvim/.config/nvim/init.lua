@@ -9,6 +9,11 @@
 
 -- ---------------- Core ----------------
 vim.g.mapleader = " "
+-- Disable rust.vim's built-in format-on-save; we drive rustfmt via conform
+-- after our own import cleanup, and rust.vim's BufWritePre hook otherwise
+-- fights that pipeline. Must be set before the rust ftplugin loads.
+vim.g.rustfmt_autosave = 0
+vim.g.loaded_rust_vim_plugin_autosave = 1
 vim.opt.termguicolors = true
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -336,9 +341,129 @@ require("conform").setup({
     ocaml = { "ocamlformat" },
   },
 })
+-- Format-on-save for non-Rust filetypes. Rust is handled by its own hook
+-- below (clean imports first, then format), so exclude it here to avoid a
+-- redundant pre-cleanup rustfmt pass. Cleared group prevents stacking.
+local fmt_grp = vim.api.nvim_create_augroup("FormatOnSave", { clear = true })
 vim.api.nvim_create_autocmd("BufWritePre", {
-  callback = function()
-    require("conform").format({ async = false, lsp_fallback = true })
+  group = fmt_grp,
+  callback = function(args)
+    if vim.bo[args.buf].filetype == "rust" then return end
+    require("conform").format({ bufnr = args.buf, async = false, lsp_fallback = true })
+  end,
+})
+
+-- ---------------- Rust: organize/clean imports ----------------
+-- Synchronously apply rust-analyzer's "Remove all unused imports" action (and
+-- any other matching assists), then let rustfmt sort/format. rust-analyzer
+-- serves these as `quickfix`/`source.*` kinds over the whole-buffer range, so
+-- we request across the entire document rather than at the cursor.
+local function rust_clean_imports(bufnr)
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local client = vim.lsp.get_clients({ bufnr = bufnr, name = "rust-analyzer" })[1]
+  if not client then return end
+  local enc = client.offset_encoding or "utf-8"
+
+  local params = {
+    textDocument = vim.lsp.util.make_text_document_params(bufnr),
+    range = {
+      start = { line = 0, character = 0 },
+      ["end"] = { line = vim.api.nvim_buf_line_count(bufnr), character = 0 },
+    },
+    -- NOTE: do NOT pass vim.diagnostic.get() here. That returns Neovim's
+    -- internal diagnostic shape (lnum/col/...), not the LSP wire format with
+    -- a `range` field; rust-analyzer fails to deserialize it and rejects the
+    -- whole request (-32602 missing field `range`). rust-analyzer computes its
+    -- own diagnostics for the quickfix, so an empty list is correct.
+    context = {
+      diagnostics = {},
+      only = { "quickfix", "source" },
+    },
+  }
+  local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 1500)
+
+  -- Titles we apply automatically. Anchored so we don't fire on unrelated
+  -- single-import quickfixes that happen to share the "unused import" wording.
+  local function should_apply(title)
+    title = (title or ""):lower()
+    return title:find("remove all unused imports", 1, true)
+      or title:find("organize imports", 1, true)
+  end
+
+  for _, res in pairs(results or {}) do
+    for _, action in ipairs(res.result or {}) do
+      if should_apply(action.title) then
+        if not action.edit and action.data then
+          -- Action needs resolving before it carries an edit.
+          local ok, resolved = pcall(function()
+            return client:request_sync("codeAction/resolve", action, 1500, bufnr)
+          end)
+          if ok and resolved and resolved.result then action = resolved.result end
+        end
+        if action.edit then
+          vim.lsp.util.apply_workspace_edit(action.edit, enc)
+        elseif type(action.command) == "table" then
+          client:exec_cmd(action.command, { bufnr = bufnr })
+        end
+      end
+    end
+  end
+end
+
+-- Live diagnostic: run :RustImportsDebug in a buffer where the cleanup isn't
+-- working. It reports each step so we can see exactly where it fails.
+vim.api.nvim_create_user_command("RustImportsDebug", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local msgs = {}
+  local function p(s) msgs[#msgs + 1] = s end
+  local client = vim.lsp.get_clients({ bufnr = bufnr, name = "rust-analyzer" })[1]
+  p("rust-analyzer attached: " .. tostring(client ~= nil))
+  if not client then
+    vim.notify(table.concat(msgs, "\n"), vim.log.levels.WARN)
+    return
+  end
+  local enc = client.offset_encoding or "utf-8"
+  local params = {
+    textDocument = vim.lsp.util.make_text_document_params(bufnr),
+    range = { start = { line = 0, character = 0 }, ["end"] = { line = vim.api.nvim_buf_line_count(bufnr), character = 0 } },
+    context = { diagnostics = {}, only = { "quickfix", "source" } },
+  }
+  local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 2000)
+  local matched = false
+  for cid, res in pairs(results or {}) do
+    if res.error then p("client " .. cid .. " ERROR: " .. vim.inspect(res.error)) end
+    for _, a in ipairs(res.result or {}) do
+      local t = (a.title or ""):lower()
+      if t:find("remove all unused imports", 1, true) or t:find("organize imports", 1, true) then
+        matched = true
+        p("MATCH: '" .. a.title .. "' (edit=" .. tostring(a.edit ~= nil) .. ", data=" .. tostring(a.data ~= nil) .. ")")
+      end
+    end
+  end
+  if not matched then p("No 'Remove all unused imports' action offered. Run :RustAnalyzer status / check :LspInfo.") end
+  vim.notify(table.concat(msgs, "\n"), vim.log.levels.INFO)
+end, { desc = "Diagnose Rust import cleanup" })
+
+-- Cleared augroup so re-sourcing the config never stacks duplicate hooks
+-- (duplicates race each other and can leave imports half-cleaned).
+local rust_save_grp = vim.api.nvim_create_augroup("RustCleanImportsOnSave", { clear = true })
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = rust_save_grp,
+  pattern = "*.rs",
+  callback = function(args)
+    -- Clean imports first, THEN format, so rustfmt sorts the final set.
+    rust_clean_imports(args.buf)
+    require("conform").format({ bufnr = args.buf, async = false, lsp_fallback = true })
+  end,
+})
+
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "rust",
+  callback = function(args)
+    vim.keymap.set("n", "<leader>oi", function()
+      rust_clean_imports(args.buf)
+      require("conform").format({ async = false, lsp_fallback = true })
+    end, { buffer = args.buf, silent = true, desc = "Rust: organize & clean imports" })
   end,
 })
 
