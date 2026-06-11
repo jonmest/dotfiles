@@ -28,6 +28,10 @@ vim.opt.splitright = true
 vim.opt.splitbelow = true
 vim.opt.scrolloff  = 6
 vim.opt.undofile   = true
+-- Persistent undo replaces swap's safety net; disable swap so killing nvim
+-- uncleanly (closing a terminal/multiplexer pane, dropped SSH, reboot) no
+-- longer leaves orphaned .swp files that nag on the next open.
+vim.opt.swapfile   = false
 vim.opt.cursorline = true
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
